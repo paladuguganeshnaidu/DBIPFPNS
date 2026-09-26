@@ -1,43 +1,31 @@
 # Deceptive Intrusion Prevention System (DIPS)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+Research implementation and evaluation code for a deception-based intrusion-prevention concept combining conventional detection/response with honeypot-oriented deception in a controlled network lab.
 
-This repository contains the implementation and evaluation framework for the paper **"A Deception-Based Intrusion Prevention Framework for Proactive Network Security"**.
+> **Research/demo scope:** run the emulation only in an isolated lab or against systems you are explicitly authorized to test.
 
-The Deceptive Intrusion Prevention System (DIPS) combines traditional intrusion prevention with dynamic honeypot-based deception to improve detection accuracy, reduce false positives, and gather threat intelligence.
-
-## Repository URL
-
-Use this exact public repository URL in your paper references:
+## Repository
 
 https://github.com/paladuguganeshnaidu/DBIPFPNS
 
-## Repository Structure
+## Components
 
-```text
-DBIPFPNS/
-├── README.md
-├── LICENSE
-├── topo_dips.py
-├── legit_traffic.py
-├── attack_sequence.sh
-├── evaluate_dips.py
-├── generate_subset.py
-└── cicids2017_subset.zip
-```
+| File | Purpose |
+|---|---|
+| `topo_dips.py` | Mininet topology definition for the virtual network |
+| `legit_traffic.py` | Benign background traffic generator |
+| `attack_sequence.sh` | Controlled lab attack-simulation sequence |
+| `evaluate_dips.py` | Evaluation script for reported metrics |
+| `generate_subset.py` | Generates the local labelled evaluation subset |
+| `cicids2017_subset.zip` | Local subset archive |
 
-## Contents
+## Requirements
 
-- `topo_dips.py` - Mininet topology script for the four-node virtual network.
-- `legit_traffic.py` - Generates benign background traffic from emulated users.
-- `attack_sequence.sh` - Runs a safe multi-stage attack simulation sequence in a lab.
-- `evaluate_dips.py` - Main evaluation script that reproduces accuracy, false-positive rate, and response-time metrics.
-- `generate_subset.py` - Creates a minimal labelled subset archive for deterministic testing.
+The repository uses Python packages including NumPy, pandas, requests, scikit-learn, Scapy and PyShark.
 
-## Prerequisites
+The lab workflow also refers to external tools/services such as Mininet, Snort, TShark, Cowrie and Dionaea.
 
-- Kali Linux (or any Debian-based system) with at least 4 GB RAM.
-- Python 3.8+.
+Example Debian/Kali setup:
 
 ```bash
 sudo apt update
@@ -45,32 +33,60 @@ sudo apt install mininet python3-pip snort tshark cowrie dionaea -y
 pip3 install -r requirements.txt
 ```
 
-## Quick Start (Reproduce Paper Results)
+The exact package availability and service names vary by distribution.
 
-1. Clone the repository.
+## Quick start
+
+Clone:
 
 ```bash
 git clone https://github.com/paladuguganeshnaidu/DBIPFPNS.git
 cd DBIPFPNS
 ```
 
-2. Generate the evaluation dataset subset.
+Generate the evaluation subset:
 
 ```bash
 python3 generate_subset.py
 ```
 
-3. Run the DIPS evaluation.
+Run the evaluation script:
 
 ```bash
 python3 evaluate_dips.py
 ```
 
-Expected output:
+## Controlled network emulation
+
+The repository documents a Mininet workflow:
+
+```bash
+sudo mn --custom topo_dips.py --topo dips --controller=none
+```
+
+Benign traffic example:
+
+```bash
+python3 legit_traffic.py --target 10.0.0.30 --duration 60
+```
+
+The repository also contains an attack-simulation script. Use that only inside the intended isolated lab and only against authorized targets.
+
+## Dataset
+
+The project documents use of a pre-processed subset of CIC-IDS2017. The upstream dataset is maintained by the Canadian Institute for Cybersecurity.
+
+Official dataset page:
+
+https://www.unb.ca/cic/datasets/ids-2017.html
+
+The local README states a 10,000-flow subset with 6,500 benign and 3,500 malicious flows. Treat those figures as the repository's current dataset composition, not as properties of CIC-IDS2017 as a whole.
+
+## Reported evaluation figures
+
+The repository's existing evaluation documentation reports:
 
 ```text
-Confusion Matrix:
-TP=3025, FP=325, FN=475, TN=6175
 Accuracy: 92.00%
 False Positive Rate: 5.00%
 Precision: 90.30%
@@ -79,75 +95,35 @@ F1-score: 88.32%
 Average Response Time: 260 ms
 ```
 
-## Run the Full Emulation (Mininet + Live Simulation)
+These are repository-reported experiment figures. Re-run `evaluate_dips.py` before presenting them as current reproducibility results.
 
-1. Start the virtual network.
+## Baseline
 
-```bash
-sudo mn --custom topo_dips.py --topo dips --controller=none
-```
+The project documentation refers to Snort as the traditional IPS baseline. The exact Snort version/configuration should be recorded with any new experiment.
 
-2. In separate terminals (for example, Mininet xterms):
+## Research status
 
-- Start production services (SSH, HTTP) on the prod node.
-- Launch honeypots (Cowrie, Dionaea) on the decoy node.
-- Start Snort on the host bridge interface.
-- Run benign traffic generation:
+The repository contains experimental code and evaluation scaffolding. It should not be interpreted as evidence of production-grade intrusion-prevention accuracy without additional testing on held-out data, different network conditions and an explicitly reproducible protocol.
 
-```bash
-python3 legit_traffic.py --target 10.0.0.30 --duration 60
-```
+## Security and ethics
 
-- Run attack simulation sequence:
+- Use an isolated lab for active attack simulation.
+- Do not run the scripts against public or third-party infrastructure without authorization.
+- Treat packet captures, logs and discovered hosts as sensitive.
+- Document experiment scope and rollback procedures.
 
-```bash
-bash attack_sequence.sh 10.0.0.30
-```
+## Testing
 
-The DIPS control logic described in the paper can then redirect suspicious traffic to decoys and enforce automated blocking.
-
-## Dataset Information
-
-The evaluation uses a pre-processed subset of the CIC-IDS2017 dataset (10,000 labelled flows). The original full dataset is available at:
-
-https://www.unb.ca/cic/datasets/ids-2017.html
-
-The local subset archive (`cicids2017_subset.zip`) is generated by `generate_subset.py` and contains:
-
-- 6,500 benign flows sampled from Monday normal traffic.
-- 3,500 malicious flows spanning attack categories.
-- Ground-truth labels in CSV format.
-
-## Traditional IPS Benchmark
-
-Snort 3.1 with community rules is used as the baseline traditional IPS. Reference configuration and rules are available at:
-
-https://www.snort.org/
-
-## Citation
-
-If you use this code or dataset in your research, please cite:
-
-```bibtex
-@inproceedings{your-paper,
-  title     = {A Deception-Based Intrusion Prevention Framework for Proactive Network Security},
-  author    = {Your Name and Others},
-  booktitle = {Proceedings of ...},
-  year      = {2025}
-}
-```
+No maintained automated test suite or coverage percentage is claimed by this README. Experimental results should be regenerated from the repository code and recorded with dataset/version, model/configuration and environment details.
 
 ## License
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+This repository contains an MIT License. See [LICENSE](LICENSE).
 
-## Link Check (Before Submission)
+## Citation
 
-1. Confirm the repository is public: https://github.com/paladuguganeshnaidu/DBIPFPNS
-2. Open the link in a private browser window to verify no login is required.
-3. Paste the exact same URL in the paper references.
-4. Click the URL from your exported PDF to confirm reviewer accessibility.
+The repository currently includes a draft BibTeX placeholder rather than a finalized publication citation. Replace it with the final bibliographic record only after the associated paper has a stable publication/identifier.
 
-## Contact
+## Author
 
-For questions or collaboration, open an issue in this repository.
+Paladugu Ganesh Naidu
